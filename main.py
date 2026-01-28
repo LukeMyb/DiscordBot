@@ -14,7 +14,7 @@ class MyBot(commands.Bot): #commands.botは継承元である親クラス
         )
 
     async def setup_hook(self): #非同期のネットワークが絡む初期設定
-        # ここでcogsフォルダ内のファイルを読み込む処理を書く
+        await self.load_extension("cogs.ping")
         print(f"Logged in as {self.user}")
 
 load_dotenv() #.envの内容を環境変数としてロード
