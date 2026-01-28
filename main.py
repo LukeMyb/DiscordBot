@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 import os
+from dotenv import load_dotenv
 
 class MyBot(commands.Bot):
     def __init__(self):
@@ -18,5 +19,7 @@ class MyBot(commands.Bot):
         # 最初はシンプルに起動確認のみ
         print(f"Logged in as {self.user}")
 
+load_dotenv() #.envの内容を環境変数としてロード
 bot = MyBot()
-bot.run("YOUR_TOKEN_HERE")
+TOKEN = os.getenv("DISCORD_TOKEN")
+bot.run(TOKEN)
