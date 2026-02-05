@@ -60,14 +60,14 @@ class Leveling(commands.Cog):
             VALUES (?, 1)
             ON CONFLICT(user_id) DO UPDATE SET
                 msg_count = levels.msg_count + 1
-        """, (message.author.id))
+        """, (message.author.id, ))
 
         await self.db.commit()
 
         #レベルが上がったらレベル表示を更新
         fetch = await self.db.execute("""
             SELECT msg_count FROM levels WHERE user_id = ?
-        """, (message.author.id))
+        """, (message.author.id, ))
         fetch = await fetch.fetchone() #クエリを取り出す
         msg_count: int = 0
         if fetch != None:
@@ -75,14 +75,21 @@ class Leveling(commands.Cog):
 
         level: int = 1
         temp: int = msg_count
-        while level * 10 <= temp:
+        while level * 10 <= temp: #Lv.1:0~9, Lv.2:10~29, Lv.3:30~59, ... (LvUPする度に必要メッセージ数が10ずつ増えていく)
             temp -= level * 10
             level += 1
+
+        pre_level: int = 1
+        temp = msg_count - 1
+        while pre_level * 10 <= temp:
+            temp -= pre_level * 10
+            pre_level += 1
         
-            
-    @commands.command()
-    async def show_levels(self, ctx):
-        pass
+        if pre_level != level or "[Lv." not in message.author.display_name: #メッセージ送信前と後のレベルを比較してレベルアップを検知
+            try:
+                await message.author.edit(nick=f"[Lv.{level}] {message.author.name}") #レベルを更新
+            except Exception as e:
+                await message.channel.send(content=f"{e}")
 
 async def setup(bot):
     await bot.add_cog(Leveling(bot))
