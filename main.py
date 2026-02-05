@@ -16,6 +16,7 @@ class MyBot(commands.Bot): #commands.botは継承元である親クラス
     async def setup_hook(self): #非同期のネットワークが絡む初期設定
         await self.load_extension("cogs.ping")
         await self.load_extension("cogs.admin")
+        await self.load_extension("cogs.leveling")
         print(f"Logged in as {self.user}")
 
 load_dotenv() #.envの内容を環境変数としてロード
