@@ -26,7 +26,7 @@ class Leveling(commands.Cog):
         status_msg = await ctx.send("同期を開始します。時間がかかる場合があります...")
         counts = {}
         for channel in ctx.guild.text_channels: #全チャンネルを探索
-            await status_msg.edit(content=f"{channel.name}を探索中...")
+            await status_msg.edit(content=f"{channel.mention}を探索中...")
 
             try:
                 async for message in channel.history(limit=None): #チャンネル内の全メッセージを探索
