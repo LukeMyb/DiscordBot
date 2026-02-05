@@ -49,11 +49,40 @@ class Leveling(commands.Cog):
 
         await self.db.commit()
         await status_msg.edit(content="同期が完了しました")
-            
 
+    @commands.Cog.listener()
+    async def on_message(self, message):
+        if message.author.bot: return
+
+        #メッセージを受け取ったらメッセージ数+1
+        await self.db.execute("""
+            INSERT INTO levels (user_id, msg_count)
+            VALUES (?, 1)
+            ON CONFLICT(user_id) DO UPDATE SET
+                msg_count = levels.msg_count + 1
+        """, (message.author.id))
+
+        await self.db.commit()
+
+        #レベルが上がったらレベル表示を更新
+        fetch = await self.db.execute("""
+            SELECT msg_count FROM levels WHERE user_id = ?
+        """, (message.author.id))
+        fetch = await fetch.fetchone() #クエリを取り出す
+        msg_count: int = 0
+        if fetch != None:
+            msg_count = fetch[0] #クエリを数値に変換
+
+        level: int = 1
+        temp: int = msg_count
+        while level * 10 <= temp:
+            temp -= level * 10
+            level += 1
+        
+            
     @commands.command()
-    async def level(self, ctx):
-        await ctx.send("This is a leveling command.")
+    async def show_levels(self, ctx):
+        pass
 
 async def setup(bot):
     await bot.add_cog(Leveling(bot))
