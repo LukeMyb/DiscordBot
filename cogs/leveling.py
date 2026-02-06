@@ -50,8 +50,35 @@ class Leveling(commands.Cog):
         await self.db.commit()
         await status_msg.edit(content="同期が完了しました")
 
+    @commands.command()
+    @commands.has_permissions(administrator=True) #実行者の権限確認
+    async def sync_show_levels(self, ctx): #管理者がギルド全員のレベルを名前の横に表示(更新)する
+        for member in ctx.guild.members:
+            if member.bot: continue
+
+            fetch = await self.db.execute("""
+                SELECT msg_count FROM levels WHERE user_id = ?
+            """, (member.id, ))
+            fetch = await fetch.fetchone() #クエリを取り出す
+            msg_count: int = 0
+            if fetch != None:
+                msg_count = fetch[0] #クエリを数値に変換
+
+            level: int = 1
+            temp: int = msg_count
+            while level * 10 <= temp: #Lv.1:0~9, Lv.2:10~29, Lv.3:30~59, ... (LvUPする度に必要メッセージ数が10ずつ増えていく)
+                temp -= level * 10
+                level += 1
+            
+            try:
+                await member.edit(nick=f"[Lv.{level}] {member.global_name}") #レベルを更新
+            except discord.Forbidden: #ニックネーム変更権限がない, または階層が上の場合はスルー
+                pass
+            except Exception as e:
+                await ctx.send(content=f"{e}")
+
     @commands.Cog.listener()
-    async def on_message(self, message):
+    async def on_message(self, message): #レベルの動的更新
         if message.author.bot: return
 
         #メッセージを受け取ったらメッセージ数+1
@@ -88,6 +115,8 @@ class Leveling(commands.Cog):
         if pre_level != level or "[Lv." not in message.author.display_name: #メッセージ送信前と後のレベルを比較してレベルアップを検知
             try:
                 await message.author.edit(nick=f"[Lv.{level}] {message.author.global_name}") #レベルを更新
+            except discord.Forbidden: #ニックネーム変更権限がない, または階層が上の場合はスルー
+                pass
             except Exception as e:
                 await message.channel.send(content=f"{e}")
 
