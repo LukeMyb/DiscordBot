@@ -87,7 +87,7 @@ class Leveling(commands.Cog):
         
         if pre_level != level or "[Lv." not in message.author.display_name: #メッセージ送信前と後のレベルを比較してレベルアップを検知
             try:
-                await message.author.edit(nick=f"[Lv.{level}] {message.author.name}") #レベルを更新
+                await message.author.edit(nick=f"[Lv.{level}] {message.author.global_name}") #レベルを更新
             except Exception as e:
                 await message.channel.send(content=f"{e}")
 
