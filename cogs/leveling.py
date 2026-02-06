@@ -53,6 +53,15 @@ class Leveling(commands.Cog):
         await self.db.commit()
         await status_msg.edit(content="同期が完了しました")
 
+    def get_level(self, msg_count):
+        level: int = 1
+        temp: int = msg_count
+        while level * 10 <= temp: #Lv.1:0~9, Lv.2:10~29, Lv.3:30~59, ... (LvUPする度に必要メッセージ数が10ずつ増えていく)
+            temp -= level * 10
+            level += 1
+
+        return level, temp
+
     @commands.command()
     @commands.has_permissions(administrator=True) #実行者の権限確認
     async def sync_show_levels(self, ctx): #管理者がギルド全員のレベルを名前の横に表示(更新)する
@@ -126,6 +135,22 @@ class Leveling(commands.Cog):
                 pass
             except Exception as e:
                 await message.channel.send(content=f"{e}")
+
+    @commands.command()
+    async def level(self, ctx): #現在のレベルとプログレスを表示
+        fetch = await self.db.execute("""
+            SELECT msg_count FROM levels WHERE user_id = ? AND guild_id = ?
+        """, (ctx.author.id, ctx.guild.id))
+        fetch = await fetch.fetchone() #クエリを取り出す
+        msg_count: int = 0
+        if fetch != None:
+            msg_count = fetch[0] #クエリを数値に変換
+
+        embed = discord.Embed(title=f"現在の{ctx.author.global_name}のレベル", color=0x0000FF)
+        embed.set_thumbnail(url=ctx.author.display_avatar.url)
+        level, temp = self.get_level(msg_count)
+        embed.add_field(name=f"[Lv.{level}] {ctx.author.global_name} ({ctx.author.name})", value=f"`|{'█' * (temp*20//(level*10))}{'░' * (20 - temp*20//(level*10))}| {temp*100//(level*10)}% Lv.{level+1}まであと{level*10 - temp}`", inline = False) #プログレスバーと次のレベルまで必要なメッセージ数の表示
+        await ctx.send(embed=embed)
 
 async def setup(bot):
     await bot.add_cog(Leveling(bot))
