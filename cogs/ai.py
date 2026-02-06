@@ -12,8 +12,10 @@ class Ai(commands.Cog):
         count: int = 0
         data: list = []
         for channel in ctx.guild.text_channels: #全チャンネルを探索
+            if channel.id in [1280150783161143297, 1280292202949644369, 1317465310403624990]: continue #通話募集用のチャンネルなどは学習データに含めない
+
             try:
-                async for message in channel.history(limit=None): #チャンネル内の全メッセージを探索
+                async for message in channel.history(limit=None, oldest_first=True): #チャンネル内の全メッセージを探索
                     if message.author.bot: continue #botならスルー
                     data.append(message.content)
 
