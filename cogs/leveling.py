@@ -1,6 +1,7 @@
 import discord
 from discord.ext import commands
 import aiosqlite
+import asyncio
 
 class Leveling(commands.Cog):
     def __init__(self, bot):
@@ -14,8 +15,10 @@ class Leveling(commands.Cog):
         self.db = await aiosqlite.connect("leveling.db")
         await self.db.execute("""
             CREATE TABLE IF NOT EXISTS levels (
-                user_id INTEGER PRIMARY KEY,
-                msg_count INTEGER NOT NULL DEFAULT 0
+                guild_id INTEGER,
+                user_id INTEGER,
+                msg_count INTEGER NOT NULL DEFAULT 0,
+                PRIMARY KEY (guild_id, user_id) --この2つの組み合わせを唯一の鍵にする
             )
         """)
         await self.db.commit()
@@ -41,11 +44,11 @@ class Leveling(commands.Cog):
 
         for user_id, msg_count in counts.items():
             await self.db.execute("""
-                INSERT INTO levels (user_id, msg_count) --データを格納
-                VALUES (?, ?) --?はSQLインジェクションを防ぐため
-                ON CONFLICT(user_id) DO UPDATE SET --user_idが既にあってエラーが起きたら(CONFLICT)更新(UPDATE)に切り替える
+                INSERT INTO levels (guild_id, user_id, msg_count) --データを格納
+                VALUES (?, ?, ?) --?はSQLインジェクションを防ぐため
+                ON CONFLICT(guild_id, user_id) DO UPDATE SET --user_idが既にあってエラーが起きたら(CONFLICT)更新(UPDATE)に切り替える
                     msg_count = excluded.msg_count --既存のmsg_countを, 本来入れるはずだった新しい値(excluded.msg_count)で書き換える
-            """, (user_id, msg_count))
+            """, (ctx.guild.id, user_id, msg_count))
 
         await self.db.commit()
         await status_msg.edit(content="同期が完了しました")
@@ -53,12 +56,13 @@ class Leveling(commands.Cog):
     @commands.command()
     @commands.has_permissions(administrator=True) #実行者の権限確認
     async def sync_show_levels(self, ctx): #管理者がギルド全員のレベルを名前の横に表示(更新)する
+        status_msg = await ctx.send(content="全メンバーのレベルを表示しています...")
         for member in ctx.guild.members:
             if member.bot: continue
 
             fetch = await self.db.execute("""
-                SELECT msg_count FROM levels WHERE user_id = ?
-            """, (member.id, ))
+                SELECT msg_count FROM levels WHERE user_id = ? AND guild_id = ?
+            """, (member.id, ctx.guild.id))
             fetch = await fetch.fetchone() #クエリを取り出す
             msg_count: int = 0
             if fetch != None:
@@ -71,30 +75,33 @@ class Leveling(commands.Cog):
                 level += 1
             
             try:
-                await member.edit(nick=f"[Lv.{level}] {member.global_name}") #レベルを更新
+                await member.edit(nick=f"[Lv.{level}] {member.global_name or member.name}") #レベルを更新
+                await asyncio.sleep(1)
             except discord.Forbidden: #ニックネーム変更権限がない, または階層が上の場合はスルー
                 pass
             except Exception as e:
                 await ctx.send(content=f"{e}")
+        
+        await status_msg.edit(content="全メンバーのレベルを表示しました")
 
     @commands.Cog.listener()
     async def on_message(self, message): #レベルの動的更新
-        if message.author.bot: return
+        if message.author.bot or message.guild is None: return
 
         #メッセージを受け取ったらメッセージ数+1
         await self.db.execute("""
-            INSERT INTO levels (user_id, msg_count)
-            VALUES (?, 1)
-            ON CONFLICT(user_id) DO UPDATE SET
+            INSERT INTO levels (guild_id, user_id, msg_count)
+            VALUES (?, ?, 1)
+            ON CONFLICT(guild_id, user_id) DO UPDATE SET
                 msg_count = levels.msg_count + 1
-        """, (message.author.id, ))
+        """, (message.guild.id, message.author.id, ))
 
         await self.db.commit()
 
         #レベルが上がったらレベル表示を更新
         fetch = await self.db.execute("""
-            SELECT msg_count FROM levels WHERE user_id = ?
-        """, (message.author.id, ))
+            SELECT msg_count FROM levels WHERE user_id = ? AND guild_id = ?
+        """, (message.author.id, message.guild.id))
         fetch = await fetch.fetchone() #クエリを取り出す
         msg_count: int = 0
         if fetch != None:
@@ -114,7 +121,7 @@ class Leveling(commands.Cog):
         
         if pre_level != level or "[Lv." not in message.author.display_name: #メッセージ送信前と後のレベルを比較してレベルアップを検知
             try:
-                await message.author.edit(nick=f"[Lv.{level}] {message.author.global_name}") #レベルを更新
+                await message.author.edit(nick=f"[Lv.{level}] {message.author.global_name or message.author.name}") #レベルを更新
             except discord.Forbidden: #ニックネーム変更権限がない, または階層が上の場合はスルー
                 pass
             except Exception as e:
