@@ -26,7 +26,7 @@ class Ai(commands.Cog):
     @commands.has_permissions(administrator=True) #実行者の権限確認
     async def get_conv(self, ctx): #学習データを抽出
         if not os.path.exists("conv_data.csv"): #csvファイルが無かったらヘッダーをつけて作成
-            self.write2csv([["timestamp", "channel_id", "user_id", "message_content"]])
+            self.write2csv([["timestamp", "user_id", "message_content"]])
 
         status_msg = await ctx.send("会話データの取得を開始します。時間がかかる場合があります...")
         count: int = 0 #取得したメッセージ数
@@ -39,7 +39,7 @@ class Ai(commands.Cog):
                     if message.author.bot: continue #botならスルー
                     cleaned: str = self.clean_text(message.content)
                     if cleaned: #中身が空っぽでなければlistに追加
-                        data.append([str(message.created_at), str(message.channel.id), str(message.author.id), cleaned]) #送信時刻, チャンネルid, ユーザーid, クレンジングしたメッセージを格納
+                        data.append([str(message.created_at), str(message.author.id), cleaned]) #送信時刻, ユーザーid, クレンジングしたメッセージを格納
 
                     if len(data) == 1000: #リストのメッセージ数が1000を超えたら一旦ファイルに保存
                         self.write2csv(data)
