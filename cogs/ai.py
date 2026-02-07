@@ -88,24 +88,33 @@ class Ai(commands.Cog):
                 current_time: datetime = datetime.fromisoformat(row[0]) #現在のメッセージの送信時刻
                 current_sequence: list = token_surface
                 if is_first:
-                    current_sequence.insert(0, "[BOS]")
-                    current_sequence.append("[EOS]") #BOS/EOSは文章の開始/終了 (Beginning Of Sentence, End Of Sentence)
+                    current_sequence.insert(0, "[BOS]") #BOS/EOSは文章の開始/終了 (Beginning Of Sentence, End Of Sentence)
 
+                    #1つ前のメッセージの情報を更新して次のループへ
+                    prev_sequence = current_sequence
                     is_first = False
                 else:
                     time_passed: bool = (current_time - prev_time).total_seconds() > 3600 #前回のメッセージから1時間経過しているかどうか
 
                     if prev_user == current_user and not time_passed: #ユーザーが同じ && 時間が空いてない場合: 1つの文章として結合する
-                        pass
+                        prev_sequence.extend(current_sequence)
                     elif prev_user != current_user and not time_passed: #ユーザーが違う && 時間が空いてない場合: 返答として認識
-                        pass
+                        prev_sequence.append("[SEP]")
+                        prev_sequence += current_sequence
                     elif time_passed: #時間が空いている場合: 新しい文章として認識
-                        pass
+                        prev_sequence.append("[EOS]")
+                        my_dict.append(prev_sequence)
+                        current_sequence.insert(0, "[BOS]")
+
+                        prev_sequence = current_sequence #1つ前のメッセージの情報を更新して次のループへ
 
                 #1つ前のメッセージの情報を更新して次のループへ
                 prev_time = current_time
                 prev_user = current_user
-                prev_sequence = current_sequence
+            
+            #一番最後のメッセージを追加
+            prev_sequence.append("[EOS]")
+            my_dict.append(prev_sequence)
 
                 
 
