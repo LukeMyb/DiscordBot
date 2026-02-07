@@ -3,6 +3,8 @@ from discord.ext import commands
 import os
 import re #正規表現を扱う (特定のルール(パターン)に基づいた文字の塊を見つけ出し, 自由自在に加工する)
 import csv
+from janome.tokenizer import Tokenizer #品詞分解
+from datetime import datetime
 
 class Ai(commands.Cog):
     def __init__(self, bot):
@@ -60,6 +62,24 @@ class Ai(commands.Cog):
                 print(e)
 
         await status_msg.edit(content=f"探索が終了しました\n取得したメッセージ数: {count}")
+
+    @commands.command()
+    @commands.has_permissions(administrator=True) #実行者の権限確認
+    async def part_of_speech(self, ctx): #品詞分解
+        with open("conv_data.csv", encoding="utf-8-sig") as file:
+            t = Tokenizer()
+            reader = csv.reader(file)
+            data: list = [] #[時刻, ユーザーid, 文章を品詞分解した単語のリスト]
+            next(reader) #ヘッダーを除外
+            for row in reader: #csvの形は timestamp, user id, message content
+                tokens = t.tokenize(row[2]) #品詞分解(この時点では品詞などの情報も含まれるオブジェクト)
+                
+                #品詞などの情報を除外
+                token_surface: list = []
+                for token in tokens:
+                    token_surface.append(token.surface)
+
+                data.append([datetime.fromisoformat(row[0]), row[1], token_surface])
 
 async def setup(bot):
     await bot.add_cog(Ai(bot))

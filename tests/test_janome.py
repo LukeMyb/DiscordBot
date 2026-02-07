@@ -1,4 +1,4 @@
-from janome.tokenizer import Tokenizer, Token
+from janome.tokenizer import Tokenizer #品詞分解
 
 t = Tokenizer()
 tokens = t.tokenize("Pythonでおしゃべりボットを作る, ")
