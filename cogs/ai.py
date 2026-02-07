@@ -41,7 +41,7 @@ class Ai(commands.Cog):
                     if cleaned: #中身が空っぽでなければlistに追加
                         data.append([str(message.created_at), str(message.channel.id), str(message.author.id), cleaned]) #送信時刻, チャンネルid, ユーザーid, クレンジングしたメッセージを格納
 
-                    if len(data) == 1000: #リストのメッセージ数が100を超えたら一旦ファイルに保存
+                    if len(data) == 1000: #リストのメッセージ数が1000を超えたら一旦ファイルに保存
                         self.write2csv(data)
                         count += 1000
                         data = []
