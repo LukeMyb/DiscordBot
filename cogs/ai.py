@@ -66,13 +66,16 @@ class Ai(commands.Cog):
     @commands.command()
     @commands.has_permissions(administrator=True) #実行者の権限確認
     async def create_dict(self, ctx): #辞書を作成
+        sentences: list = [] #文章をある程度正確に区切ったメッセージ群
+
         with open("conv_data.csv", encoding="utf-8-sig") as file:
             t = Tokenizer()
             reader = csv.reader(file)
-            my_dict: list = [] #文章をある程度正確に区切ったメッセージ群
+
             prev_time: datetime
             prev_user: str = ""
             prev_sequence: list = [] #1つ前のメッセージの品詞分解されたリスト
+
             next(reader) #ヘッダーを除外
             is_first: bool = True #ファイルを読み込んで最初の行か
             for row in reader: #csvの形は timestamp, user id, message content
@@ -103,7 +106,7 @@ class Ai(commands.Cog):
                         prev_sequence += current_sequence
                     elif time_passed: #時間が空いている場合: 新しい文章として認識
                         prev_sequence.append("[EOS]")
-                        my_dict.append(prev_sequence)
+                        sentences.append(prev_sequence)
                         current_sequence.insert(0, "[BOS]")
 
                         prev_sequence = current_sequence #1つ前のメッセージの情報を更新して次のループへ
@@ -114,11 +117,12 @@ class Ai(commands.Cog):
             
             #一番最後のメッセージを追加
             prev_sequence.append("[EOS]")
-            my_dict.append(prev_sequence)
+            sentences.append(prev_sequence)
 
-                
-
-
+        my_dict: dict = {}
+        for sentence in sentences:
+            for i in range(len(sentence) - 2):
+                my_dict.setdefault((sentence[i], sentence[i+1]), []).append(sentence[i+2]) #3-gram(手前2つの単語から次の単語を確率で選ぶ)
 
 async def setup(bot):
     await bot.add_cog(Ai(bot))

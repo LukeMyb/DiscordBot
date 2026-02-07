@@ -27,7 +27,7 @@ class Leveling(commands.Cog):
     @commands.has_permissions(administrator=True) #実行者の権限確認
     async def sync_levels(self, ctx): #管理者がギルド全員のレベルを同期させる
         status_msg = await ctx.send("同期を開始します。時間がかかる場合があります...")
-        counts = {}
+        counts: dict = {}
         for channel in ctx.guild.text_channels: #全チャンネルを探索
             await status_msg.edit(content=f"{channel.mention}を探索中...")
 
