@@ -65,12 +65,16 @@ class Ai(commands.Cog):
 
     @commands.command()
     @commands.has_permissions(administrator=True) #実行者の権限確認
-    async def part_of_speech(self, ctx): #品詞分解
+    async def create_dict(self, ctx): #辞書を作成
         with open("conv_data.csv", encoding="utf-8-sig") as file:
             t = Tokenizer()
             reader = csv.reader(file)
-            data: list = [] #[時刻, ユーザーid, 文章を品詞分解した単語のリスト]
+            my_dict: list = [] #文章をある程度正確に区切ったメッセージ群
+            prev_time: datetime
+            prev_user: str = ""
+            prev_sequence: list = [] #1つ前のメッセージの品詞分解されたリスト
             next(reader) #ヘッダーを除外
+            is_first: bool = True #ファイルを読み込んで最初の行か
             for row in reader: #csvの形は timestamp, user id, message content
                 tokens = t.tokenize(row[2]) #品詞分解(この時点では品詞などの情報も含まれるオブジェクト)
                 
@@ -79,7 +83,33 @@ class Ai(commands.Cog):
                 for token in tokens:
                     token_surface.append(token.surface)
 
-                data.append([datetime.fromisoformat(row[0]), row[1], token_surface])
+                #文章の区切りを追加
+                current_user: str = row[1]
+                current_time: datetime = datetime.fromisoformat(row[0]) #現在のメッセージの送信時刻
+                current_sequence: list = token_surface
+                if is_first:
+                    current_sequence.insert(0, "[BOS]")
+                    current_sequence.append("[EOS]") #BOS/EOSは文章の開始/終了 (Beginning Of Sentence, End Of Sentence)
+
+                    is_first = False
+                else:
+                    time_passed: bool = (current_time - prev_time).total_seconds() > 3600 #前回のメッセージから1時間経過しているかどうか
+
+                    if prev_user == current_user and not time_passed: #ユーザーが同じ && 時間が空いてない場合: 1つの文章として結合する
+                        pass
+                    elif prev_user != current_user and not time_passed: #ユーザーが違う && 時間が空いてない場合: 返答として認識
+                        pass
+                    elif time_passed: #時間が空いている場合: 新しい文章として認識
+                        pass
+
+                #1つ前のメッセージの情報を更新して次のループへ
+                prev_time = current_time
+                prev_user = current_user
+                prev_sequence = current_sequence
+
+                
+
+
 
 async def setup(bot):
     await bot.add_cog(Ai(bot))
