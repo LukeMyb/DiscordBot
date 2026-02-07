@@ -155,11 +155,16 @@ class Ai(commands.Cog):
             return restored_dict
         
     @commands.Cog.listener()
-    async def on_message(self, message): #メッセージに対する応答
+    async def on_message(self, message): #メッセージの生成
         if message.author.bot: return
         if message.channel.id != 1469285650036686858: return #AIチャンネルのみで反応するように
 
-        
+        #応答モード
+        #ユーザーのメッセージをjanomeで解析し, 品詞分解する
+        #名詞をキーワードとしてリストに保持
+        #文末の[SEP]を起点に文章を100個くらい生成する(文章を100個生成するときは(ユーザーの文末の2もしくは1単語ㅣ[SEP])で探索してから生成)
+        #それぞれの文章に対してスコアリング(キーワードが入っているか)
+        #キーワードが含まれてる文章を最優先で出力, どれにも含まれていなければ最も自然なものあるいはランダム
 
     
 
