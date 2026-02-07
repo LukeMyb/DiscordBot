@@ -11,6 +11,8 @@ class Ai(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
+        self.my_dict = self.load_dict()
+
     def clean_text(self, text: str): #学習時にノイズとなる文字列を削除
         text = re.sub(r'https?://[\w/:%#\$&\?\(\)~\.=\+\-@]+', '', text) #URLを削除
         text = re.sub(r'<[@#&]!?\d+>', '', text) #メンション・チャンネルリンクを削除
@@ -35,7 +37,7 @@ class Ai(commands.Cog):
         count: int = 0 #取得したメッセージ数
         data: list = [] #csvに書き込む前に一時的にリストに保存
         for channel in ctx.guild.text_channels: #全チャンネルを探索
-            if channel.id in [1280150783161143297, 1280292202949644369, 1317465310403624990]: continue #通話募集用のチャンネルなどは学習データに含めない
+            if channel.id in [1280150783161143297, 1280292202949644369, 1317465310403624990, 1469285650036686858]: continue #通話募集用のチャンネルなどは学習データに含めない
 
             try:
                 async for message in channel.history(limit=None, oldest_first=True): #チャンネル内の全メッセージを探索
@@ -134,7 +136,32 @@ class Ai(commands.Cog):
         with open("data/dict.json", "w", encoding="utf-8") as file:
             json.dump(save_dict, file, ensure_ascii=False, indent=4)
 
+        self.my_dict = self.load_dict() #メモリに反映
+
         await status_msg.edit(content=f"辞書の作成が完了しました")
+
+
+
+    def load_dict(self): #dict.jsonを読み込み
+        #dict.jsonの存在を確認
+        if not os.path.exists("data/dict.json"):
+            print("辞書が見つかりません")
+            return {}
+        
+        #ファイル読み込み
+        with open("data/dict.json", mode="r", encoding="utf-8") as file:
+            my_dict = json.load(file)
+            restored_dict = {tuple(key.split("ㅣ")): value for key, value in my_dict.items()} #キーをstrからタプルに変換
+            return restored_dict
+        
+    @commands.Cog.listener()
+    async def on_message(self, message): #メッセージに対する応答
+        if message.author.bot: return
+        if message.channel.id != 1469285650036686858: return #AIチャンネルのみで反応するように
+
+        
+
+    
 
 async def setup(bot):
     await bot.add_cog(Ai(bot))
