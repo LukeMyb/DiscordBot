@@ -5,6 +5,7 @@ import re #正規表現を扱う (特定のルール(パターン)に基づい�
 import csv
 from janome.tokenizer import Tokenizer #品詞分解
 from datetime import datetime
+import json
 
 class Ai(commands.Cog):
     def __init__(self, bot):
@@ -66,6 +67,8 @@ class Ai(commands.Cog):
     @commands.command()
     @commands.has_permissions(administrator=True) #実行者の権限確認
     async def create_dict(self, ctx): #辞書を作成
+        status_msg = await ctx.send("辞書の作成を開始します。時間がかかる場合があります...")
+
         sentences: list = [] #文章をある程度正確に区切ったメッセージ群
 
         with open("conv_data.csv", encoding="utf-8-sig") as file:
@@ -119,10 +122,19 @@ class Ai(commands.Cog):
             prev_sequence.append("[EOS]")
             sentences.append(prev_sequence)
 
+        await status_msg.edit(content=f"文章を辞書化中...")
+
         my_dict: dict = {}
         for sentence in sentences:
             for i in range(len(sentence) - 2):
                 my_dict.setdefault((sentence[i], sentence[i+1]), []).append(sentence[i+2]) #3-gram(手前2つの単語から次の単語を確率で選ぶ)
+
+        #jsonに保存
+        save_dict = {"ㅣ".join(key): value for key, value in my_dict.items()} #json用にタプル型のキーをstrに変換
+        with open("dict.json", "w", encoding="utf-8") as file:
+            json.dump(save_dict, file, ensure_ascii=False, indent=4)
+
+        await status_msg.edit(content=f"辞書の作成が完了しました")
 
 async def setup(bot):
     await bot.add_cog(Ai(bot))
