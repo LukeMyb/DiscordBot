@@ -1,6 +1,6 @@
 import discord
 from discord.ext import commands
-import aiosqlite
+import aiosqlite #非同期処理に対応したSQL
 import asyncio
 
 class Leveling(commands.Cog):
