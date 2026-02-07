@@ -21,14 +21,14 @@ class Ai(commands.Cog):
         return text.strip() #前後の余計な空白を消して, 中身があれば返す
     
     def write2csv(self, data: list):
-        with open("conv_data.csv", "a", encoding="utf-8-sig", newline="") as file: #newline=""は改行コードの自動変換をしないように, -sigはexcelで文字化けしなくなるらしい
+        with open("data/conv_data.csv", "a", encoding="utf-8-sig", newline="") as file: #newline=""は改行コードの自動変換をしないように, -sigはexcelで文字化けしなくなるらしい
             writer = csv.writer(file)
             writer.writerows(data)
 
     @commands.command()
     @commands.has_permissions(administrator=True) #実行者の権限確認
     async def get_conv(self, ctx): #学習データを抽出
-        if not os.path.exists("conv_data.csv"): #csvファイルが無かったらヘッダーをつけて作成
+        if not os.path.exists("data/conv_data.csv"): #csvファイルが無かったらヘッダーをつけて作成
             self.write2csv([["timestamp", "user_id", "message_content"]])
 
         status_msg = await ctx.send("会話データの取得を開始します。時間がかかる場合があります...")
@@ -71,7 +71,7 @@ class Ai(commands.Cog):
 
         sentences: list = [] #文章をある程度正確に区切ったメッセージ群
 
-        with open("conv_data.csv", encoding="utf-8-sig") as file:
+        with open("data/conv_data.csv", encoding="utf-8-sig") as file:
             t = Tokenizer()
             reader = csv.reader(file)
 
@@ -131,7 +131,7 @@ class Ai(commands.Cog):
 
         #jsonに保存
         save_dict = {"ㅣ".join(key): value for key, value in my_dict.items()} #json用にタプル型のキーをstrに変換
-        with open("dict.json", "w", encoding="utf-8") as file:
+        with open("data/dict.json", "w", encoding="utf-8") as file:
             json.dump(save_dict, file, ensure_ascii=False, indent=4)
 
         await status_msg.edit(content=f"辞書の作成が完了しました")

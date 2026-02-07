@@ -12,7 +12,7 @@ class Leveling(commands.Cog):
         await self.init_db()
 
     async def init_db(self): #データベースの初期化
-        self.db = await aiosqlite.connect("leveling.db")
+        self.db = await aiosqlite.connect("data/leveling.db")
         await self.db.execute("""
             CREATE TABLE IF NOT EXISTS levels (
                 guild_id INTEGER,
