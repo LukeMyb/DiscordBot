@@ -209,5 +209,7 @@ __marimo__/
 #token
 .env
 
-#memo
+#status file
 memo.txt
+leveling.db
+conv_data.txt
