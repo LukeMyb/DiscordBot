@@ -6,6 +6,7 @@ import csv
 from janome.tokenizer import Tokenizer #品詞分解
 from datetime import datetime
 import json
+import random
 
 class Ai(commands.Cog):
     def __init__(self, bot):
@@ -155,7 +156,7 @@ class Ai(commands.Cog):
             return restored_dict
         
     @commands.Cog.listener()
-    async def on_message(self, message): #メッセージの生成
+    async def on_message(self, message): #メッセージの生成(応答モード)
         if message.author.bot: return
         if message.channel.id != 1469285650036686858: return #AIチャンネルのみで反応するように
 
@@ -166,7 +167,44 @@ class Ai(commands.Cog):
         #それぞれの文章に対してスコアリング(キーワードが入っているか)
         #キーワードが含まれてる文章を最優先で出力, どれにも含まれていなければ最も自然なものあるいはランダム
 
-    
+    @commands.command()
+    async def generate(self, ctx): #メッセージの生成(独り言モード)
+        if ctx.author.bot: return
+        if ctx.channel.id != 1469285650036686858: return #AIチャンネルのみで反応するように
+
+        #[BOS]で始まるキーを全部取得
+        first: list = []
+        for key in self.my_dict.keys():
+            if key[0] == "[BOS]":
+                first.append(key)
+
+        anss: list = [] #送信するメッセージの候補
+        for i in range(100):
+            ans: list = [] #anssの要素の一つ
+
+            current_key: tuple = random.choice(first) #[BOS]で始まるキーから最初のキーをランダムで選択
+            current_value: str = random.choice(self.my_dict[current_key])
+            count: int = 0
+            while True:
+                #生成するメッセージに使用する単語を確定
+                if len(ans) == 0:
+                    ans.append(current_key[0])
+                    ans.append(current_key[1])
+                ans.append(current_value)
+
+                if current_value == "[EOS]" or current_value == "[SEP]": break #メッセージの生成を終了
+                if count >= 50: break #無限ループに入った場合を考慮して50回で強制終了
+                count += 1
+
+                #次の単語へ
+                current_key = (current_key[1], current_value)
+                current_value = random.choice(self.my_dict[current_key])
+            anss.append(ans) #生成したメッセージをリストに追加
+
+        result: str = "".join(random.choice(anss)) #送信するメッセージを選択してstrに変換
+        result = result.replace("[BOS]", "").replace("[EOS]", "").replace("[SEP]", "")
+        await ctx.send(result)
+        
 
 async def setup(bot):
     await bot.add_cog(Ai(bot))
