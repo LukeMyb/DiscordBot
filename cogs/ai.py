@@ -185,7 +185,8 @@ class Ai(commands.Cog):
 
         anss: list = [] #送信するメッセージの候補
         except_ans: int = 0
-        for i in range(100):
+        generate_msg: int = 1000
+        for i in range(generate_msg):
             ans: list = [] #anssの要素の一つ
 
             #メッセージを1つ生成
@@ -211,7 +212,7 @@ class Ai(commands.Cog):
             else:
                 except_ans += 1
 
-        print(f"除外されたメッセージ数: {except_ans} / 100")
+        print(f"除外されたメッセージ数: {except_ans} / {generate_msg}")
         for ans in anss:
             print("".join(ans))
 
