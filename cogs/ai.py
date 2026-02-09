@@ -44,7 +44,7 @@ class Ai(commands.Cog):
                 async for message in channel.history(limit=None, oldest_first=True): #チャンネル内の全メッセージを探索
                     if message.author.bot: continue #botならスルー
                     cleaned: str = self.clean_text(message.content)
-                    if cleaned or len(cleaned) >= 2: #中身が空っぽ or 極端に短い単語でなければlistに追加
+                    if cleaned and len(cleaned) >= 2: #中身が空っぽじゃない and 極端に短い単語でなければlistに追加
                         data.append([str(message.created_at), str(message.author.id), cleaned]) #送信時刻, ユーザーid, クレンジングしたメッセージを格納
 
                     if len(data) == 1000: #リストのメッセージ数が1000を超えたら一旦ファイルに保存
@@ -208,6 +208,15 @@ class Ai(commands.Cog):
                 current_key = (current_key[1], current_value)
                 current_value = random.choice(self.my_dict[current_key])
             if 5+2 <= len(ans) and len(ans) <= 15+2: #文章が崩壊しないように単語数を制限 (+2は[BOS], [EOS], [SEP]を除外して単語数を考慮するため)
+                if "[BOS]" in ans:
+                    ans.remove("[BOS]")
+                if "[EOS]" in ans:
+                    ans.remove("[EOS]")
+                if "[SEP]" in ans:
+                    ans.remove("[SEP]")
+
+                self.scoring(ans)
+
                 anss.append(ans) #生成したメッセージをリストに追加
             else:
                 except_ans += 1
@@ -217,7 +226,6 @@ class Ai(commands.Cog):
             print("".join(ans))
 
         result: str = "".join(random.choice(anss)) #送信するメッセージを選択してstrに変換
-        result = result.replace("[BOS]", "").replace("[EOS]", "").replace("[SEP]", "")
         await ctx.send(result)
 
     def scoring(self, ans):
