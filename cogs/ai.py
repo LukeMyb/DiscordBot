@@ -103,7 +103,12 @@ class Ai(commands.Cog):
                     prev_sequence = current_sequence
                     is_first = False
                 else:
-                    time_passed: bool = (current_time - prev_time).total_seconds() > 3600 #前回のメッセージから1時間経過しているかどうか
+                    #前回のメッセージからの経過時間
+                    time_passed: bool
+                    if prev_time.hour <= 6:
+                        time_passed = (current_time - prev_time).total_seconds() > 3600 * 3 #0~6時は3時間以内のメッセージが返信判定
+                    else:
+                        time_passed = (current_time - prev_time).total_seconds() > 3600 + 1800 #7時以降は1.5時間以内のメッセージが返信判定
 
                     if prev_user == current_user and not time_passed: #ユーザーが同じ && 時間が空いてない場合: 1つの文章として結合する
                         prev_sequence.extend(current_sequence)
