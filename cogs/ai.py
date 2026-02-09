@@ -44,7 +44,7 @@ class Ai(commands.Cog):
                 async for message in channel.history(limit=None, oldest_first=True): #チャンネル内の全メッセージを探索
                     if message.author.bot: continue #botならスルー
                     cleaned: str = self.clean_text(message.content)
-                    if cleaned: #中身が空っぽでなければlistに追加
+                    if cleaned or len(cleaned) >= 2: #中身が空っぽ or 極端に短い単語でなければlistに追加
                         data.append([str(message.created_at), str(message.author.id), cleaned]) #送信時刻, ユーザーid, クレンジングしたメッセージを格納
 
                     if len(data) == 1000: #リストのメッセージ数が1000を超えたら一旦ファイルに保存
