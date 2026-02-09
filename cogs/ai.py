@@ -206,6 +206,9 @@ class Ai(commands.Cog):
                 current_value = random.choice(self.my_dict[current_key])
             anss.append(ans) #生成したメッセージをリストに追加
 
+        for ans in anss:
+            print("".join(ans))
+
         result: str = "".join(random.choice(anss)) #送信するメッセージを選択してstrに変換
         result = result.replace("[BOS]", "").replace("[EOS]", "").replace("[SEP]", "")
         await ctx.send(result)
