@@ -184,9 +184,11 @@ class Ai(commands.Cog):
                 first.append(key)
 
         anss: list = [] #送信するメッセージの候補
+        except_ans: int = 0
         for i in range(100):
             ans: list = [] #anssの要素の一つ
 
+            #メッセージを1つ生成
             current_key: tuple = random.choice(first) #[BOS]で始まるキーから最初のキーをランダムで選択
             current_value: str = random.choice(self.my_dict[current_key])
             count: int = 0
@@ -204,14 +206,21 @@ class Ai(commands.Cog):
                 #次の単語へ
                 current_key = (current_key[1], current_value)
                 current_value = random.choice(self.my_dict[current_key])
-            anss.append(ans) #生成したメッセージをリストに追加
+            if 5+2 <= len(ans) and len(ans) <= 15+2: #文章が崩壊しないように単語数を制限 (+2は[BOS], [EOS], [SEP]を除外して単語数を考慮するため)
+                anss.append(ans) #生成したメッセージをリストに追加
+            else:
+                except_ans += 1
 
+        print(f"除外されたメッセージ数: {except_ans} / 100")
         for ans in anss:
             print("".join(ans))
 
         result: str = "".join(random.choice(anss)) #送信するメッセージを選択してstrに変換
         result = result.replace("[BOS]", "").replace("[EOS]", "").replace("[SEP]", "")
         await ctx.send(result)
+
+    def scoring(self, ans):
+        pass
         
 
 async def setup(bot):
