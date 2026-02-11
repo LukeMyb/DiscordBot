@@ -215,8 +215,6 @@ class Ai(commands.Cog):
                 if "[SEP]" in ans:
                     ans.remove("[SEP]")
 
-                self.scoring(ans)
-
                 anss.append(ans) #生成したメッセージをリストに追加
             else:
                 except_ans += 1
@@ -225,11 +223,14 @@ class Ai(commands.Cog):
         for ans in anss:
             print("".join(ans))
 
-        result: str = "".join(random.choice(anss)) #送信するメッセージを選択してstrに変換
+        result: str = "".join(self.scoring(anss)) #送信するメッセージを選択してstrに変換
         await ctx.send(result)
 
-    def scoring(self, ans):
-        pass
+    def scoring(self, anss):
+        scores: list = [] #メッセージ群(anss)のインデックスごとに対応させたスコア群
+        result: list = [] #返すメッセージ
+        result = anss[0] #仮に1番目を返すようにしとく
+        return result
         
 
 async def setup(bot):
