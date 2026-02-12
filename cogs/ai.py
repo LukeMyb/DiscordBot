@@ -215,7 +215,10 @@ class Ai(commands.Cog):
                 if "[SEP]" in ans:
                     ans.remove("[SEP]")
 
-                anss.append(ans) #生成したメッセージをリストに追加
+                if ans not in anss: #重複を削除
+                    anss.append(ans) #生成したメッセージをリストに追加
+                else:
+                    except_ans += 1
             else:
                 except_ans += 1
 
