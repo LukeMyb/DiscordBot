@@ -238,7 +238,7 @@ class Ai(commands.Cog):
                 #posはpart of speech(品詞)の略
                 pos: list = token.part_of_speech.split(',') #token.part_of_speechはlistの形をしたstrだからlistに変換
 
-                if pos[0] == "名詞" and pos[1] != "数": #名詞が1個あれば+10点
+                if pos[0] == "名詞" and pos[1] not in ["数", "サ変接続", "非自立", "代名詞"]: #名詞が1個あれば+10点
                     score += 7
                 elif pos[0] == "動詞":
                     score += 5
@@ -248,10 +248,8 @@ class Ai(commands.Cog):
                     score -= 5
             
             last_word: list = tokens[-1].part_of_speech.split(',')
-            if (last_word[0] == "助詞" and last_word[1] != "終助詞") or last_word[0] == "記号": #文章が助詞で終わるならスコアは0
-                score -= 10
-            elif last_word[0] == "助動詞":
-                score += 5
+            if last_word[0] not in ["動詞", "形容詞", "助動詞"] and last_word[1] != "終助詞": #文末ペナルティ
+                score -= 50
             
             proper_len: int = 10 #文章の適切な長さ
             total_score: float = (score / len(tokens)) - 0.5*abs(len(tokens) - proper_len) #トータルスコア
@@ -260,7 +258,7 @@ class Ai(commands.Cog):
         print(f"max_score = {max(scores)}")
 
         max_scores: list = [] #最大スコアの文章群のインデックス
-        max_value: int = max(scores)
+        max_value: float = max(scores)
         for index, score in enumerate(scores):
             if score == max_value:
                 max_scores.append(index)
