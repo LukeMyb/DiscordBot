@@ -223,14 +223,32 @@ class Ai(commands.Cog):
         for ans in anss:
             print("".join(ans))
 
-        result: str = "".join(self.scoring(anss)) #送信するメッセージを選択してstrに変換
-        await ctx.send(result)
+        await ctx.send(self.scoring(anss)) #スコアリングして最も点数が高い文章をメッセージとして送信
 
     def scoring(self, anss):
         scores: list = [] #メッセージ群(anss)のインデックスごとに対応させたスコア群
-        result: list = [] #返すメッセージ
-        result = anss[0] #仮に1番目を返すようにしとく
-        return result
+
+        t = Tokenizer()
+        for ans in anss:
+            tokens = t.tokenize("".join(ans)) #一度一つの文章に結合して再度品詞分解(品詞を特定するため)
+
+            #単語の品詞からスコアリング
+            score: int = 0
+            for token in tokens:
+                #posはpart of speech(品詞)の略
+                pos: list = token.part_of_speech.split(',') #token.part_of_speechはlistの形をしたstrだからlistに変換
+
+                if pos[0] == "名詞" and pos[1] != "数": #名詞が1個あれば+10点
+                    score += 10
+                elif pos[0] == "動詞":
+                    score += 5
+                elif pos[0] == "記号":
+                    score -= 5
+            scores.append(score)
+
+        print(f"max_score = {max(scores)}")
+        result = anss[scores.index(max(scores))] #(スコアが最大の文章群)の中からインデックスが最小の文章をresultとする
+        return "".join(result) #strに変換して返す
         
 
 async def setup(bot):
