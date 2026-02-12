@@ -249,7 +249,9 @@ class Ai(commands.Cog):
             
             if tokens[-1].part_of_speech.startswith("助詞"): #文章が助詞で終わるならスコアは0
                 score = 0
-            scores.append(score)
+            
+            average: int = score / len(tokens)
+            scores.append(average)
 
         print(f"max_score = {max(scores)}")
         result = anss[scores.index(max(scores))] #(スコアが最大の文章群)の中からインデックスが最小の文章をresultとする
