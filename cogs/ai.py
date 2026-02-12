@@ -247,14 +247,21 @@ class Ai(commands.Cog):
                 elif pos[0] == "記号":
                     score -= 5
             
-            if tokens[-1].part_of_speech.startswith("助詞"): #文章が助詞で終わるならスコアは0
+            if tokens[-1].part_of_speech.startswith("助詞") and pos[1] != "終助詞": #文章が助詞で終わるならスコアは0
                 score = 0
             
-            average: int = score / len(tokens)
-            scores.append(average)
+            proper_len: int = 10 #文章の適切な長さ
+            total_score: float = (score / len(tokens)) - abs(len(tokens) - proper_len) #トータルスコア
+            scores.append(total_score)
 
         print(f"max_score = {max(scores)}")
-        result = anss[scores.index(max(scores))] #(スコアが最大の文章群)の中からインデックスが最小の文章をresultとする
+
+        max_scores: list = [] #最大スコアの文章群のインデックス
+        for index, score in enumerate(scores):
+            if score == max(scores):
+                max_scores.append(index)
+
+        result = anss[random.choice(max_scores)] #最大スコアの文章群からランダムで選ぶ
         return "".join(result) #strに変換して返す
         
 
