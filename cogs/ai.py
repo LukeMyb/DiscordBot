@@ -248,8 +248,10 @@ class Ai(commands.Cog):
                     score -= 5
             
             last_word: list = tokens[-1].part_of_speech.split(',')
-            if last_word[0] == "助詞" and last_word[1] != "終助詞": #文章が助詞で終わるならスコアは0
+            if (last_word[0] == "助詞" and last_word[1] != "終助詞") or last_word[0] == "記号": #文章が助詞で終わるならスコアは0
                 score -= 10
+            elif last_word[0] == "助動詞":
+                score += 5
             
             proper_len: int = 10 #文章の適切な長さ
             total_score: float = (score / len(tokens)) - 0.5*abs(len(tokens) - proper_len) #トータルスコア
