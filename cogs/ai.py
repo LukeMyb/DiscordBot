@@ -230,7 +230,7 @@ class Ai(commands.Cog):
 
         t = Tokenizer()
         for ans in anss:
-            tokens = t.tokenize("".join(ans)) #一度一つの文章に結合して再度品詞分解(品詞を特定するため)
+            tokens = list(t.tokenize("".join(ans))) #一度一つの文章に結合して再度品詞分解(品詞を特定するため)
 
             #単語の品詞からスコアリング
             score: int = 0
@@ -239,11 +239,16 @@ class Ai(commands.Cog):
                 pos: list = token.part_of_speech.split(',') #token.part_of_speechはlistの形をしたstrだからlistに変換
 
                 if pos[0] == "名詞" and pos[1] != "数": #名詞が1個あれば+10点
-                    score += 10
+                    score += 7
                 elif pos[0] == "動詞":
+                    score += 5
+                elif pos[0] == "形容詞":
                     score += 5
                 elif pos[0] == "記号":
                     score -= 5
+            
+            if tokens[-1].part_of_speech.startswith("助詞"): #文章が助詞で終わるならスコアは0
+                score = 0
             scores.append(score)
 
         print(f"max_score = {max(scores)}")
