@@ -219,9 +219,9 @@ class Ai(commands.Cog):
             else:
                 except_ans += 1
 
-        print(f"除外されたメッセージ数: {except_ans} / {generate_msg}")
         for ans in anss:
             print("".join(ans))
+        print(f"除外されたメッセージ数: {except_ans} / {generate_msg}")
 
         await ctx.send(self.scoring(anss)) #スコアリングして最も点数が高い文章をメッセージとして送信
 
@@ -247,18 +247,20 @@ class Ai(commands.Cog):
                 elif pos[0] == "記号":
                     score -= 5
             
-            if tokens[-1].part_of_speech.startswith("助詞") and pos[1] != "終助詞": #文章が助詞で終わるならスコアは0
-                score = 0
+            last_word: list = tokens[-1].part_of_speech.split(',')
+            if last_word[0] == "助詞" and last_word[1] != "終助詞": #文章が助詞で終わるならスコアは0
+                score -= 10
             
             proper_len: int = 10 #文章の適切な長さ
-            total_score: float = (score / len(tokens)) - abs(len(tokens) - proper_len) #トータルスコア
+            total_score: float = (score / len(tokens)) - 0.5*abs(len(tokens) - proper_len) #トータルスコア
             scores.append(total_score)
 
         print(f"max_score = {max(scores)}")
 
         max_scores: list = [] #最大スコアの文章群のインデックス
+        max_value: int = max(scores)
         for index, score in enumerate(scores):
-            if score == max(scores):
+            if score == max_value:
                 max_scores.append(index)
 
         result = anss[random.choice(max_scores)] #最大スコアの文章群からランダムで選ぶ
