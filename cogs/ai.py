@@ -255,7 +255,7 @@ class Ai(commands.Cog):
                 score -= 50
             
             proper_len: int = 10 #文章の適切な長さ
-            total_score: float = (score / len(tokens)) - 0.5*abs(len(tokens) - proper_len) #トータルスコア
+            total_score: float = (score / len(tokens)) - 0.5*abs(len(tokens) - proper_len) #トータルスコア(単語の平均スコア - 0.5*|実際の長さ - 文章の適切な長さ|)
             scores.append(total_score)
 
         print(f"max_score = {max(scores)}")
