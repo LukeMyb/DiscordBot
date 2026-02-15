@@ -1,0 +1,24 @@
+name: Deploy Bot
+
+on:
+  push:
+    branches:
+      - main  # main ブランチに push された時に実行
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Execute remote commands via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_PRIVATE_KEY }}
+          port: 22
+          script: |
+            # 以前作ったエイリアスの中身を実行
+            cd ~/DiscordBot
+            git pull
+            sudo systemctl restart discord-bot
+            sudo systemctl status discord-bot
