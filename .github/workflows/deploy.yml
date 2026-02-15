@@ -9,19 +9,17 @@ jobs:
   deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: Execute remote commands via SSH
+      - name: Deploy to GCP
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SSH_HOST }}
           username: ${{ secrets.SSH_USER }}
           key: ${{ secrets.SSH_PRIVATE_KEY }}
-          port: 22
           script: |
             cd ~/DiscordBot
             git pull
-            # 仮想環境を起動してライブラリを更新
             source .venv/bin/activate
             pip install -r requirements.txt
-            # その後、Bot を再起動
             sudo systemctl restart discord-bot
-            sudo systemctl status discord-bot
+            # --no-pager をつけることで、フリーズを物理的に防ぎます
+            sudo systemctl status discord-bot --no-pager
