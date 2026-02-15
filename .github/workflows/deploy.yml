@@ -17,8 +17,11 @@ jobs:
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           port: 22
           script: |
-            # 以前作ったエイリアスの中身を実行
             cd ~/DiscordBot
             git pull
+            # 仮想環境を起動してライブラリを更新
+            source .venv/bin/activate
+            pip install -r requirements.txt
+            # その後、Bot を再起動
             sudo systemctl restart discord-bot
             sudo systemctl status discord-bot
