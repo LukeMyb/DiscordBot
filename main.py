@@ -10,7 +10,7 @@ class MyBot(commands.Bot): #commands.botは継承元である親クラス
         intents.message_content = True #メッセージ本文を読み取る権限を有効にする
         
         super().__init__( #親クラス(スーパークラス)のコンストラクタ, Pythonでは親クラスも明示的に初期化してあげる必要がある, selfが無くても自動で親クラスのメソッドにインスタンスを引き渡してくれる
-            command_prefix="!", #コマンドの接頭辞
+            command_prefix=os.getenv("PREFIX", "!"), #コマンドの接頭辞
             intents=intents #intentsオブジェクトを親クラスに渡す
         )
 
