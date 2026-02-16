@@ -25,3 +25,5 @@ load_dotenv() #.envの内容を環境変数としてロード
 bot = MyBot()
 TOKEN = os.getenv("DISCORD_TOKEN")
 bot.run(TOKEN)
+
+#Infrastructure Test 2026-02-16
