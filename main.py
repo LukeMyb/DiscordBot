@@ -19,6 +19,7 @@ class MyBot(commands.Bot): #commands.botは継承元である親クラス
         await self.load_extension("cogs.admin")
         await self.load_extension("cogs.leveling")
         await self.load_extension("cogs.ai")
+        await self.load_extension("cogs.meme")
         print(f"Logged in as {self.user}")
 
 load_dotenv() #.envの内容を環境変数としてロード
