@@ -106,6 +106,14 @@ class Meme(commands.Cog):
                     img.save(buffer, format="PNG")
                     buffer.seek(0) #バッファの先頭に戻る
                     await ctx.send(file=discord.File(fp=buffer, filename="output.png")) #Discordにファイルを送信
+
+                    #ユーザーのコマンド入力を削除
+                    try:
+                        await ctx.message.delete()
+                    except discord.Forbidden: #権限がない場合は無視
+                        pass
+                    except discord.HTTPException: #その他の接続エラーも無視
+                        pass
             except Exception as e:
                 await ctx.send(f"画像処理中にエラーが発生しました: {e}")
 
