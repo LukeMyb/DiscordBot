@@ -4,14 +4,15 @@ from PIL import Image, ImageDraw, ImageFont
 import io
 import os
 from dataclasses import dataclass
+from typing import Literal
 
 @dataclass
-class Pos:
+class Pos: #描画の開始位置(左上の座標)
     x: int
     y: int
 
 @dataclass
-class Size:
+class Size: #描画を許可する範囲(幅と高さ)
     w: int
     h: int
 
@@ -22,8 +23,16 @@ class DrawProps:
     base_font_size: int
 
 MEME_CONFIG = {
-    "dragon": DrawProps(pos=Pos(x=180, y=140), size=Size(w=520, h=360), base_font_size=25),
-    "robo": DrawProps(pos=Pos(x=100, y=50), size=Size(w=400, h=200), base_font_size=25),
+    "dragon": DrawProps(
+        pos=Pos(x=180, y=140), 
+        size=Size(w=520-180, h=360-140), 
+        base_font_size=80, 
+    ),
+    "robo": DrawProps(
+        pos=Pos(x=100, y=110), 
+        size=Size(w=430, h=230), 
+        base_font_size=25, 
+    ),
 }
 
 class Meme(commands.Cog):
@@ -43,7 +52,20 @@ class Meme(commands.Cog):
             return ImageFont.load_default()
         
     def draw_text(self, draw, text, dp: DrawProps):
-        pass
+        #枠の中心
+        center_x = dp.pos.x + dp.size.w // 2
+        center_y = dp.pos.y + dp.size.h // 2
+
+        text_size = dp.base_font_size #文字のサイズ
+
+        while text_size > 10: #枠内に収まるまでフォントサイズを2pxずつ下げる
+            font = self.get_font(text_size)
+            if font.getlength(text) <= dp.size.w: #実際に描画したときの幅 <= 枠の幅
+                break
+            text_size -= 2
+
+        #anchor="mm"は中央揃え
+        draw.text((center_x, center_y), text, font=font, fill=(0, 0, 0), anchor="mm")
 
     @commands.command()
     async def dragon(self, ctx, *, text: str):
@@ -55,7 +77,7 @@ class Meme(commands.Cog):
         
         async with ctx.typing():
             try:
-                with Image.open(self.dragon_path).convert("RGBA") as img: #Pillowで画像を開く
+                with Image.open(self.dragon_path).convert("RGBA") as img: #画像を開く
                     draw = ImageDraw.Draw(img)
                     self.draw_text(draw, text, dp) #画像に文字を出力
 
