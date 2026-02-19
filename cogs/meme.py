@@ -92,45 +92,30 @@ class Meme(commands.Cog):
             y = start_y + i * (line_h + line_spacing) #行が変わったらその分yを下にずらす
             draw.text((center_x, y), line, font=font, fill=(0, 0, 0), anchor="mm")
 
+    async def process_meme(self, ctx, template_path, dp, text):
+        if not os.path.exists(template_path): #ファイルの有無を確認
+            await ctx.send(f"エラー: {template_path} が見つかりません。")
+            return
+        
+        async with ctx.typing():
+            try:
+                with Image.open(template_path).convert("RGBA") as img: #画像を開く
+                    self.draw_text(ImageDraw.Draw(img), text, dp) #画像に文字を出力
+
+                    buffer = io.BytesIO() #メモリ上のバッファに保存
+                    img.save(buffer, format="PNG")
+                    buffer.seek(0) #バッファの先頭に戻る
+                    await ctx.send(file=discord.File(fp=buffer, filename="output.png")) #Discordにファイルを送信
+            except Exception as e:
+                await ctx.send(f"画像処理中にエラーが発生しました: {e}")
+
     @commands.command()
     async def dragon(self, ctx, *, text: str):
-        dp = MEME_CONFIG["dragon"] #吹き出しのデータ
-
-        if not os.path.exists(self.dragon_path): #ファイルの有無を確認
-            await ctx.send(f"エラー: {self.dragon_path} が見つかりません。")
-            return
-        
-        async with ctx.typing():
-            try:
-                with Image.open(self.dragon_path).convert("RGBA") as img: #画像を開く
-                    draw = ImageDraw.Draw(img)
-                    self.draw_text(draw, text, dp) #画像に文字を出力
-
-                    buffer = io.BytesIO() #メモリ上のバッファに保存
-                    img.save(buffer, format="PNG")
-                    buffer.seek(0) #バッファの先頭に戻る
-                    file = discord.File(fp=buffer, filename="output.png") #Discordにファイルを送信
-                    await ctx.send("", file=file)
-            except Exception as e:
-                await ctx.send(f"画像処理中にエラーが発生しました: {e}")
+        await self.process_meme(ctx, self.dragon_path, MEME_CONFIG["dragon"], text)
     
     @commands.command()
-    async def robo(self, ctx):
-        if not os.path.exists(self.robo_path): #ファイルの有無を確認
-            await ctx.send(f"エラー: {self.robo_path} が見つかりません。")
-            return
-        
-        async with ctx.typing():
-            try:
-                with Image.open(self.robo_path).convert("RGBA") as img: #Pillowで画像を開く
-                    buffer = io.BytesIO() #メモリ上のバッファに保存
-                    img.save(buffer, format="PNG")
-                    buffer.seek(0) #バッファの先頭に戻る
-
-                    file = discord.File(fp=buffer, filename="output.png") #Discordにファイルを送信
-                    await ctx.send("", file=file)
-            except Exception as e:
-                await ctx.send(f"画像処理中にエラーが発生しました: {e}")
+    async def robo(self, ctx, *, text: str):
+        await self.process_meme(ctx, self.robo_path, MEME_CONFIG["robo"], text)
 
 async def setup(bot):
     await bot.add_cog(Meme(bot))
