@@ -5,7 +5,7 @@ class Log(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
 
-        self.deployed_bot_id = 1472722426155630622 #デプロイした方のコードを動かすボットのユーザーid
+        self.deployed_bot_id = 827133058380857374 #デプロイした方のコードを動かすボットのユーザーid
 
     @commands.Cog.listener()
     async def on_voice_state_update(self, member, before, after):
