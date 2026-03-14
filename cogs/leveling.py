@@ -116,6 +116,10 @@ class Leveling(commands.Cog):
         if pre_level != level or "[Lv." not in message.author.display_name: #メッセージ送信前と後のレベルを比較してレベルアップを検知
             try:
                 await message.author.edit(nick=f"[Lv.{level}] {message.author.global_name or message.author.name}") #レベルを更新
+
+                #名前修復時ではなく, 純粋にレベルが上がった時だけリアクションを付与する
+                if pre_level != level:
+                    await message.add_reaction("🎉")
             except discord.Forbidden: #ニックネーム変更権限がない, または階層が上の場合はスルー
                 pass
             except Exception as e:
