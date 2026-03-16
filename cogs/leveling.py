@@ -65,7 +65,7 @@ class Leveling(commands.Cog):
     @commands.command()
     @commands.has_permissions(administrator=True) #実行者の権限確認
     async def sync_show_levels(self, ctx): #管理者がギルド全員のレベルを名前の横に表示(更新)する
-        status_msg = await ctx.send(content="全メンバーのレベルを表示しています...")
+        status_msg = await ctx.send(content="全メンバーのレベルとロールを同期しています...")
         for member in ctx.guild.members:
             if member.bot: continue
 
@@ -80,13 +80,32 @@ class Leveling(commands.Cog):
             level, temp = self.get_level(msg_count)
             try:
                 await member.edit(nick=f"[Lv.{level}] {member.global_name or member.name}") #レベルを更新
+
+                # 現在のレベルに基づく適切なロールの計算と一斉付与・剥奪
+                # 例: Lv34なら30、Lv8なら0、Lv55なら50になるよう計算
+                target_role_level = min((level // 10) * 10, 50)
+
+                # 10〜50の全レベルロールを確認し、正しいものだけ残して他は消す（クレンジング）
+                for r_level in [10, 20, 30, 40, 50]:
+                    role = discord.utils.get(ctx.guild.roles, name=f"Lv.{r_level}")
+                    if not role: continue
+                    
+                    if r_level == target_role_level:
+                        # 本来持つべきロールを持っていない場合のみ付与
+                        if role not in member.roles:
+                            await member.add_roles(role)
+                    else:
+                        # 持つべきではない過去・未来のロールを持っていたら剥奪
+                        if role in member.roles:
+                            await member.remove_roles(role)
+
                 await asyncio.sleep(1)
             except discord.Forbidden: #ニックネーム変更権限がない, または階層が上の場合はスルー
                 pass
             except Exception as e:
                 await ctx.send(content=f"{e}")
         
-        await status_msg.edit(content="全メンバーのレベルを表示しました")
+        await status_msg.edit(content="全メンバーのレベルとロールの同期が完了しました")
 
     @commands.Cog.listener()
     async def on_message(self, message): #レベルの動的更新
