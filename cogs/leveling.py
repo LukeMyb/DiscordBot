@@ -120,8 +120,23 @@ class Leveling(commands.Cog):
                 #名前修復時ではなく, 純粋にレベルが上がった時だけリアクションを付与する
                 if pre_level != level:
                     await message.add_reaction("🎉")
+
+                    #レベルが10の倍数(10, 20...)の時にロールを付与・切り替え
+                    if level % 10 == 0:
+                        #付与する新しいロールを名前で検索
+                        new_role = discord.utils.get(message.guild.roles, name=f"Lv.{level}")
+                        if new_role:
+                            await message.author.add_roles(new_role)
+
+                        #1つ前の階級のロールがあれば剥奪する（ロール欄が被らないように綺麗に保つ）
+                        if level >= 20:
+                            old_role = discord.utils.get(message.guild.roles, name=f"Lv.{level-10}")
+                            if old_role and old_role in message.author.roles:
+                                await message.author.remove_roles(old_role)
             except discord.Forbidden: #ニックネーム変更権限がない, または階層が上の場合はスルー
                 pass
+
+            
             except Exception as e:
                 await message.channel.send(content=f"{e}")
 
