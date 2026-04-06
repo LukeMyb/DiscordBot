@@ -141,8 +141,12 @@ class Leveling(commands.Cog):
         
         level, temp = self.get_level(msg_count)
         pre_level, temp = self.get_level(msg_count-1)
-        if pre_level != level or "[Lv." not in message.author.display_name: #メッセージ送信前と後のレベルを比較してレベルアップを検知
+
+        expected_prefix = f"[Lv.{level}]" #現在の正しいレベル表記を定義
+        #1回の発言でのレベルアップ時、または現在の名前が正しいレベル表記を含んでいない時
+        if pre_level != level or expected_prefix not in message.author.display_name:
             try:
+                #表示が間違っている場合、またはレベルアップした場合は名前を正しく更新
                 await message.author.edit(nick=f"[Lv.{level}] {message.author.global_name or message.author.name}") #レベルを更新
 
                 #名前修復時ではなく, 純粋にレベルが上がった時だけリアクションを付与する
@@ -163,8 +167,6 @@ class Leveling(commands.Cog):
                                 await message.author.remove_roles(old_role)
             except discord.Forbidden: #ニックネーム変更権限がない, または階層が上の場合はスルー
                 pass
-
-            
             except Exception as e:
                 await message.channel.send(content=f"{e}")
 
