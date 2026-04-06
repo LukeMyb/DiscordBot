@@ -212,6 +212,4 @@ __marimo__/
 #status file
 memo.txt
 tests/
-leveling.db
-conv_data.csv
-dict.json
+data/
