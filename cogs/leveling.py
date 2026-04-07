@@ -151,7 +151,7 @@ class Leveling(commands.Cog):
 
                 #名前修復時ではなく, 純粋にレベルが上がった時だけリアクションを付与する
                 if pre_level != level:
-                    await message.add_reaction(":up:")
+                    await message.add_reaction("🎊")
 
                     #レベルが10の倍数(10, 20...)の時にロールを付与・切り替え
                     if level % 10 == 0:
