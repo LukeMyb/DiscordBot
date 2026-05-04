@@ -24,6 +24,11 @@ class Pinboard(commands.Cog):
             message = await channel.fetch_message(payload.message_id)
         except (discord.NotFound, discord.Forbidden):
             return
+        
+        # 既にBotが📌を付けている場合は処理を終了する（重複防止）
+        for reaction in message.reactions:
+            if str(reaction.emoji) == "📌" and reaction.me:
+                return
 
         # 追加されたリアクションのカウントを確認する
         for reaction in message.reactions:
