@@ -34,12 +34,18 @@ class Pinboard(commands.Cog):
         for reaction in message.reactions:
             # 文字列に変換して絵文字が一致するか判定する
             if str(reaction.emoji) == str(payload.emoji):
-                # リアクションが2つついた時にメッセージを返信する
-                if reaction.count == 2:
-                    await message.add_reaction("📌")
-
+                # リアクションが3つついた時にメッセージを返信する
+                if reaction.count == 3:
                     # 「ピンボード」という名前のチャンネルを探索
                     target_channel = discord.utils.get(message.guild.text_channels, name="ピンボード")
+
+                    # ピンボードチャンネルが見つからない場合の安全策
+                    if not target_channel:
+                        return
+                    
+                    # チャンネルが存在することが確定してから📌をつける
+                    await message.add_reaction("📌")
+                    
                     if target_channel:
                         # Embedの作成
                         embed = discord.Embed(
