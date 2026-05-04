@@ -46,28 +46,27 @@ class Pinboard(commands.Cog):
                     # チャンネルが存在することが確定してから📌をつける
                     await message.add_reaction("📌")
                     
-                    if target_channel:
-                        # Embedの作成
-                        embed = discord.Embed(
-                            description=message.content, # メッセージ本文
-                            color=0xFFD700, # ゴールド系の色
-                            timestamp=message.created_at # 元のメッセージの投稿時間
-                        )
-                        # 投稿者の名前とアイコンを設定
-                        embed.set_author(
-                            name=message.author.display_name,
-                            icon_url=message.author.display_avatar.url
-                        )
+                    # Embedの作成
+                    embed = discord.Embed(
+                        description=message.content, # メッセージ本文
+                        color=0xFFD700, # ゴールド系の色
+                        timestamp=message.created_at # 元のメッセージの投稿時間
+                    )
+                    # 投稿者の名前とアイコンを設定
+                    embed.set_author(
+                        name=message.author.display_name,
+                        icon_url=message.author.display_avatar.url
+                    )
 
-                        # メッセージに添付ファイルがある場合、最初の画像をEmbedにセットする
-                        if message.attachments:
-                            embed.set_image(url=message.attachments[0].url)
+                    # メッセージに添付ファイルがある場合、最初の画像をEmbedにセットする
+                    if message.attachments:
+                        embed.set_image(url=message.attachments[0].url)
 
-                        # contentとembedを同時に送信する
-                        await target_channel.send(
-                            content=f"{payload.emoji} {reaction.count} | {message.jump_url}",
-                            embed=embed
-                        )
+                    # contentとembedを同時に送信する
+                    await target_channel.send(
+                        content=f"{payload.emoji} {reaction.count} | {message.jump_url}",
+                        embed=embed
+                    )
                 break
 
 async def setup(bot):
