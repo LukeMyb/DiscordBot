@@ -53,6 +53,10 @@ class Pinboard(commands.Cog):
                             icon_url=message.author.display_avatar.url
                         )
 
+                        # メッセージに添付ファイルがある場合、最初の画像をEmbedにセットする
+                        if message.attachments:
+                            embed.set_image(url=message.attachments[0].url)
+
                         # contentとembedを同時に送信する
                         await target_channel.send(
                             content=f"{payload.emoji} {reaction.count} | {message.jump_url}",
