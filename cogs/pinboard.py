@@ -32,6 +32,12 @@ class Pinboard(commands.Cog):
                 # リアクションが2つついた時にメッセージを返信する
                 if reaction.count == 2:
                     await message.add_reaction("📌")
+
+                    # 「ピンボード」という名前のチャンネルを探索
+                    target_channel = discord.utils.get(message.guild.text_channels, name="ピンボード")
+                    if target_channel:
+                        # 対象チャンネルが見つかった場合、メッセージ本文を送信
+                        await target_channel.send(content=message.content)
                 break
 
 async def setup(bot):
