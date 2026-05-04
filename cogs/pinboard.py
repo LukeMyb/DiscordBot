@@ -11,6 +11,10 @@ class Pinboard(commands.Cog):
         if payload.member and payload.member.bot:
             return
 
+        # 絵文字の名前が「bad_social_credit」でない場合は処理を終了する
+        if payload.emoji.name != "bad_social_credit":
+            return
+
         channel = self.bot.get_channel(payload.channel_id)
         if not channel:
             return
