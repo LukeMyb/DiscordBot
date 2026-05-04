@@ -20,6 +20,7 @@ class MyBot(commands.Bot): #commands.botは継承元である親クラス
         await self.load_extension("cogs.meme")
         await self.load_extension("cogs.log")
         await self.load_extension("cogs.anonymous")
+        await self.load_extension("cogs.pinboard")
 
         print(f"Logged in as {self.user}")
 
