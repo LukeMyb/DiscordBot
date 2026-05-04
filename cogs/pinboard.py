@@ -41,8 +41,23 @@ class Pinboard(commands.Cog):
                     # 「ピンボード」という名前のチャンネルを探索
                     target_channel = discord.utils.get(message.guild.text_channels, name="ピンボード")
                     if target_channel:
-                        # 対象チャンネルが見つかった場合、メッセージ本文を送信
-                        await target_channel.send(content=message.content)
+                        # Embedの作成
+                        embed = discord.Embed(
+                            description=message.content, # メッセージ本文
+                            color=0xFFD700, # ゴールド系の色
+                            timestamp=message.created_at # 元のメッセージの投稿時間
+                        )
+                        # 投稿者の名前とアイコンを設定
+                        embed.set_author(
+                            name=message.author.display_name,
+                            icon_url=message.author.display_avatar.url
+                        )
+
+                        # contentとembedを同時に送信する
+                        await target_channel.send(
+                            content=f"{payload.emoji} {reaction.count} | {message.jump_url}",
+                            embed=embed
+                        )
                 break
 
 async def setup(bot):
