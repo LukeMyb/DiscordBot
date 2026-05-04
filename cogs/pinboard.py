@@ -31,7 +31,7 @@ class Pinboard(commands.Cog):
             if str(reaction.emoji) == str(payload.emoji):
                 # リアクションが2つついた時にメッセージを返信する
                 if reaction.count == 2:
-                    await message.reply(content="リアクションが2つ付きました")
+                    await message.add_reaction("📌")
                 break
 
 async def setup(bot):
