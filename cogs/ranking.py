@@ -1,5 +1,5 @@
 import discord
-from discord.ext import commands
+from discord.ext import commands, tasks
 import aiosqlite
 import datetime
 import zoneinfo
@@ -12,6 +12,7 @@ class Ranking(commands.Cog):
 
     async def cog_load(self): # 非同期処理の初期化
         await self.init_db()
+        self.monthly_ranking_task.start() # コグのロード時にタスクを開始
 
     async def init_db(self): # データベースの初期化
         # ランキング機能専用のデータベースを分離して作成
@@ -42,6 +43,7 @@ class Ranking(commands.Cog):
         await self.db.commit()
         
         await ctx.send(f"{target_channel.mention} を月間ランキングの発表先に設定しました")
+        
 
     # コアロジック（指定期間のメッセージを集計し、上位5名を取得）
     async def get_monthly_ranking(self, guild: discord.Guild):
@@ -74,6 +76,64 @@ class Ranking(commands.Cog):
         sorted_ranking = sorted(message_counts.items(), key=lambda x: x[1], reverse=True)[:5]
         
         return sorted_ranking, last_month_first.month
+    
+    
+    # 毎月1日の深夜1時に実行されるタスク
+    # JSTの深夜1時をタイムゾーン付きで指定
+    target_time = datetime.time(hour=1, minute=0, tzinfo=zoneinfo.ZoneInfo("Asia/Tokyo"))
+    
+    @tasks.loop(time=target_time)
+    async def monthly_ranking_task(self):
+        now = datetime.datetime.now(self.jst)
+        
+        # 今日が「1日」ではない場合は処理をスキップ
+        if now.day != 1:
+            return
+
+        # データベースから設定が登録されている全てのサーバーとチャンネルを取得
+        async with self.db.execute("SELECT guild_id, channel_id FROM settings") as cursor:
+            rows = await cursor.fetchall()
+        
+        for guild_id, channel_id in rows:
+            guild = self.bot.get_guild(guild_id)
+            if not guild:
+                continue # Botがサーバーからキックされている場合などの安全策
+            
+            target_channel = guild.get_channel(channel_id)
+            if not target_channel:
+                continue # チャンネルが削除されている場合などの安全策
+            
+            # 集計処理とEmbed作成
+            ranking_data, target_month = await self.get_monthly_ranking(guild)
+            
+            # 誰一人として発言していない月は送信をスキップ（不要な通知を防ぐため）
+            if not ranking_data:
+                continue
+
+            embed = discord.Embed(
+                title=f"👑 {target_month}月 メッセージ送信数ランキング",
+                description="先月最もサーバーを盛り上げてくれたメンバーです！",
+                color=0x00BFFF
+            )
+            
+            medals = ["🥇", "🥈", "🥉", " ", " "]
+            for i, (user_id, count) in enumerate(ranking_data):
+                member = guild.get_member(user_id)
+                name = member.display_name if member else "不明なユーザー"
+                
+                embed.add_field(
+                    name=f"{medals[i]} 第{i+1}位: {name}",
+                    value=f"{count} メッセージ",
+                    inline=False
+                )
+
+            await target_channel.send(embed=embed)
+
+    @monthly_ranking_task.before_loop
+    async def before_monthly_ranking_task(self):
+        # Botの内部キャッシュの準備が完了するまでタスクの実行を待機
+        await self.bot.wait_until_ready()
+
 
     # 手動確認用コマンド
     @commands.command(name="ranking")
