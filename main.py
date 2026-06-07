@@ -21,6 +21,7 @@ class MyBot(commands.Bot): #commands.botは継承元である親クラス
         await self.load_extension("cogs.log")
         await self.load_extension("cogs.anonymous")
         await self.load_extension("cogs.pinboard")
+        await self.load_extension("cogs.ranking")
 
         print(f"Logged in as {self.user}")
 
