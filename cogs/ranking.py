@@ -78,12 +78,27 @@ class Ranking(commands.Cog):
     # 手動確認用コマンド
     @commands.command(name="ranking")
     async def show_ranking(self, ctx):
+        # データベースから設定されたチャンネルIDを取得
+        async with self.db.execute("SELECT channel_id FROM settings WHERE guild_id = ?", (ctx.guild.id,)) as cursor:
+            row = await cursor.fetchone()
+        
+        # 設定が存在しない場合の処理
+        if not row:
+            await ctx.send("ランキングの送信先チャンネルが設定されていません。先に `!set_ranking_channel` で設定してください。")
+            return
+            
+        # チャンネルオブジェクトの取得と存在確認
+        target_channel = self.bot.get_channel(row[0])
+        if not target_channel:
+            await ctx.send("設定されたチャンネルが見つかりません。再設定を行ってください。")
+            return
+
         # 処理に時間がかかる可能性があるため、入力中(typing)のアクションを表示
         async with ctx.typing():
             ranking_data, target_month = await self.get_monthly_ranking(ctx.guild)
             
             if not ranking_data:
-                await ctx.send(f"{target_month}月のメッセージデータが見つかりませんでした。")
+                await target_channel.send(f"{target_month}月のメッセージデータが見つかりませんでした。")
                 return
 
             # Embedの作成
@@ -106,7 +121,11 @@ class Ranking(commands.Cog):
                     inline=False
                 )
 
-        await ctx.send(embed=embed)
+        await target_channel.send(embed=embed)
+
+        # コマンド実行場所と送信先が異なる場合は通知を出す
+        if ctx.channel.id != target_channel.id:
+            await ctx.send(f"{target_channel.mention} にランキングを送信しました。")
 
 async def setup(bot):
     await bot.add_cog(Ranking(bot))
