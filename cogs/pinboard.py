@@ -34,8 +34,8 @@ class Pinboard(commands.Cog):
         for reaction in message.reactions:
             # 文字列に変換して絵文字が一致するか判定する
             if str(reaction.emoji) == str(payload.emoji):
-                # リアクションが3つついた時にメッセージを返信する
-                if reaction.count == 3:
+                # リアクションが2つついた時にメッセージを返信する
+                if reaction.count == 2:
                     # 「ピンボード」という名前のチャンネルを探索
                     target_channel = discord.utils.get(message.guild.text_channels, name="ピンボード")
 
