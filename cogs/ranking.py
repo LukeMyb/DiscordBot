@@ -58,19 +58,21 @@ class Ranking(commands.Cog):
             
         message_counts = {}
 
-        # サーバー内の全テキストチャンネルをスキャン
-        for channel in guild.text_channels:
-            try:
-                # 権限がないチャンネルでのエラーを回避するため try-except を使用
-                async for message in channel.history(after=last_month_first, before=this_month_first, limit=None):
-                    # Bot自身の発言は集計から除外
-                    if message.author.bot:
-                        continue
-                    
-                    user_id = message.author.id
-                    message_counts[user_id] = message_counts.get(user_id, 0) + 1
-            except discord.Forbidden:
-                continue
+        # 探索対象(テキスト、ボイス、フォーラムのスレッドなど)を収集する処理
+        targets = {}
+        for channel in guild.channels:
+            if hasattr(channel, "history"):
+                targets[channel.id] = channel
+            
+            if hasattr(channel, "archived_threads"):
+                try:
+                    async for thread in channel.archived_threads(limit=None):
+                        targets[thread.id] = thread
+                except discord.Forbidden:
+                    pass
+
+        for thread in guild.threads:
+            targets[thread.id] = thread
         
         # 辞書を値（メッセージ数）で降順にソートし、上位5名を取得
         sorted_ranking = sorted(message_counts.items(), key=lambda x: x[1], reverse=True)[:5]
