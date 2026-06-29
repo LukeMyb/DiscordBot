@@ -2,6 +2,7 @@ import discord
 from discord.ext import commands
 import aiosqlite #非同期処理に対応したSQL
 import asyncio
+import time
 
 class Leveling(commands.Cog):
     def __init__(self, bot):
@@ -49,7 +50,12 @@ class Leveling(commands.Cog):
             targets[thread.id] = thread
 
         for channel in targets.values(): # 収集した全対象を探索
-            print(f"探索中: {channel.name} (ID: {channel.id})")
+            # チャンネルごとのカウント初期化と開始時間の記録
+            channel_msg_count = 0
+            start_time = time.perf_counter()
+            
+            # どこで処理が止まっているか分かるように開始時にも出力
+            print(f"探索開始: {channel.name} (ID: {channel.id})")
 
             await status_msg.edit(content=f"{channel.mention}を探索中...")
 
@@ -57,10 +63,16 @@ class Leveling(commands.Cog):
                 async for message in channel.history(limit=None): #チャンネル内の全メッセージを探索
                     if message.author.bot: continue #botならスルー
                     counts[message.author.id] = counts.get(message.author.id, 0) + 1 #get(A, B)はAがcountsに無かったらBの値で初期化
+                    channel_msg_count += 1 # ★追加: チャンネルごとのメッセージ数をカウント
+
             except discord.Forbidden:
                 pass
             except Exception as e:
                 await status_msg.edit(content=f"{e}")
+
+            # 実行時間の計算と詳細の出力
+            elapsed_time = time.perf_counter() - start_time
+            print(f"探索完了: {channel.name} (ID: {channel.id}) | メッセージ数: {channel_msg_count}件 | 実行時間: {elapsed_time:.2f}秒")
 
         await status_msg.edit(content="データベースに保存中...")
 
