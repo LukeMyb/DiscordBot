@@ -28,7 +28,29 @@ class Leveling(commands.Cog):
     async def sync_levels(self, ctx): #管理者がギルド全員のレベルを同期させる
         status_msg = await ctx.send("同期を開始します。時間がかかる場合があります...")
         counts: dict = {}
-        for channel in ctx.guild.text_channels: #全チャンネルを探索
+
+        # 探索対象(テキスト、ボイス、フォーラムのスレッドなど)を収集する処理
+        targets = {}
+        for channel in ctx.guild.channels:
+            # テキストチャンネルやボイスチャンネルなど履歴を持つものを追加
+            if hasattr(channel, "history"):
+                targets[channel.id] = channel
+            
+            # アーカイブ済み(過去)のスレッドも取得する(過去のフォーラム投稿を拾うため)
+            if hasattr(channel, "archived_threads"):
+                try:
+                    async for thread in channel.archived_threads(limit=None):
+                        targets[thread.id] = thread
+                except discord.Forbidden:
+                    pass
+
+        # 現在アクティブなスレッド(最近のフォーラム投稿など)を追加
+        for thread in ctx.guild.threads:
+            targets[thread.id] = thread
+
+        for channel in targets.values(): # 収集した全対象を探索
+            print(f"探索中: {channel.name} (ID: {channel.id})")
+
             await status_msg.edit(content=f"{channel.mention}を探索中...")
 
             try:
