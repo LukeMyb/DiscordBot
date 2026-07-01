@@ -74,6 +74,19 @@ class Ranking(commands.Cog):
         for thread in guild.threads:
             targets[thread.id] = thread
         
+        # 収集したチャンネル・スレッドの履歴からメッセージを集計
+        for target_id, target_channel in targets.items():
+            try:
+                async for message in target_channel.history(after=last_month_first, before=this_month_first, limit=None):
+                    # Bot自身の発言は集計から除外
+                    if message.author.bot:
+                        continue
+                    
+                    user_id = message.author.id
+                    message_counts[user_id] = message_counts.get(user_id, 0) + 1
+            except discord.Forbidden:
+                continue
+
         # 辞書を値（メッセージ数）で降順にソートし、上位5名を取得
         sorted_ranking = sorted(message_counts.items(), key=lambda x: x[1], reverse=True)[:5]
         
