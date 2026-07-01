@@ -95,7 +95,7 @@ class Ranking(commands.Cog):
     
     # 毎月1日の深夜1時に実行されるタスク
     # JSTの深夜1時をタイムゾーン付きで指定
-    target_time = datetime.time(hour=1, minute=0, tzinfo=zoneinfo.ZoneInfo("Asia/Tokyo"))
+    target_time = datetime.time(hour=14, minute=0, tzinfo=zoneinfo.ZoneInfo("Asia/Tokyo"))
     
     @tasks.loop(time=target_time)
     async def monthly_ranking_task(self):
