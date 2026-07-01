@@ -12,7 +12,7 @@ class Log(commands.Cog):
         if not self.bot.user: return #ボットの準備が完了していない場合は無視
         if self.bot.user.id != self.deployed_bot_id: return #デプロイした方を動かすボットかどうか
 
-        log_channel = discord.utils.get(member.guild.text_channels, name="log") #「log」というチャンネル名のチャンネルを検索
+        log_channel = discord.utils.get(member.guild.text_channels, name="vc-log") #「log」というチャンネル名のチャンネルを検索
         if not log_channel: return
 
         embed = discord.Embed() #embedの初期化
