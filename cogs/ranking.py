@@ -113,36 +113,61 @@ class Ranking(commands.Cog):
             guild = self.bot.get_guild(guild_id)
             if not guild:
                 continue # Botがサーバーからキックされている場合などの安全策
-            
-            target_channel = guild.get_channel(channel_id)
-            if not target_channel:
-                continue # チャンネルが削除されている場合などの安全策
-            
-            # 集計処理とEmbed作成
-            ranking_data, target_month = await self.get_monthly_ranking(guild)
-            
-            # 誰一人として発言していない月は送信をスキップ（不要な通知を防ぐため）
-            if not ranking_data:
-                continue
 
-            embed = discord.Embed(
-                title=f"👑 {target_month}月 メッセージ送信数ランキング",
-                description="先月最もサーバーを盛り上げてくれたメンバーです！",
-                color=0x00BFFF
-            )
+            # sys-log という名前のテキストチャンネルを検索
+            sys_log_channel = discord.utils.get(guild.text_channels, name="sys-log")
             
-            medals = ["🥇", "🥈", "🥉", " ", " "]
-            for i, (user_id, count) in enumerate(ranking_data):
-                member = guild.get_member(user_id)
-                name = member.display_name if member else "不明なユーザー"
+            try:
+                target_channel = guild.get_channel(channel_id)
+                if not target_channel:
+                    # ログチャンネルへの通知
+                    if sys_log_channel:
+                        await sys_log_channel.send(f"⚠️ ランキング送信先のチャンネル(ID: {channel_id})が見つかりません。設定を再確認してください。")
+                    continue # チャンネルが削除されている場合などの安全策
                 
-                embed.add_field(
-                    name=f"{medals[i]} 第{i+1}位: {name}",
-                    value=f"{count} メッセージ",
-                    inline=False
-                )
+                # 集計処理とEmbed作成
+                ranking_data, target_month = await self.get_monthly_ranking(guild)
+                
+                # 誰一人として発言していない月は送信をスキップ（不要な通知を防ぐため）
+                if not ranking_data:
+                    # ログチャンネルへの通知
+                    if sys_log_channel:
+                        await sys_log_channel.send(f"ℹ️ {target_month}月はメッセージデータが空だったため、ランキングの発表をスキップしました。")
+                    continue
 
-            await target_channel.send(embed=embed)
+                embed = discord.Embed(
+                    title=f"👑 {target_month}月 メッセージ送信数ランキング",
+                    description="先月最もサーバーを盛り上げてくれたメンバーです！",
+                    color=0x00BFFF
+                )
+                
+                medals = ["🥇", "🥈", "🥉", " ", " "]
+                for i, (user_id, count) in enumerate(ranking_data):
+                    member = guild.get_member(user_id)
+                    name = member.display_name if member else "不明なユーザー"
+                    
+                    embed.add_field(
+                        name=f"{medals[i]} 第{i+1}位: {name}",
+                        value=f"{count} メッセージ",
+                        inline=False
+                    )
+
+                await target_channel.send(embed=embed)
+
+            # エラー発生時に詳細なスタックトレースを sys-log に送信
+            except Exception as e:
+                if sys_log_channel:
+                    import traceback
+                    # エラーの文字列表現とスタックトレースを取得
+                    error_msg = "".join(traceback.format_exception(type(e), e, e.__traceback__))
+                    # Discordのメッセージ文字数制限（2000文字）を考慮してトリミング
+                    if len(error_msg) > 1900:
+                        error_msg = error_msg[:1900] + "\n... (出力制限のため省略)"
+                    
+                    await sys_log_channel.send(
+                        f"❌ **ランキング自動集計中にエラーが発生しました**\n"
+                        f"```py\n{error_msg}\n```"
+                    )
 
     @monthly_ranking_task.before_loop
     async def before_monthly_ranking_task(self):
