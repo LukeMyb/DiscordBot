@@ -90,9 +90,18 @@ class Leveling(commands.Cog):
     def get_level(self, msg_count):
         level: int = 1
         temp: int = msg_count
-        while level * 10 <= temp: #Lv.1:0~9, Lv.2:10~29, Lv.3:30~59, ... (LvUPする度に必要メッセージ数が10ずつ増えていく)
-            temp -= level * 10
-            level += 1
+
+        # Lv.1:0~9, Lv.2:10~29, Lv.3:30~59, ... (LvUPする度に必要メッセージ数が10ずつ増えていく)
+        # Lv.50で必要メッセージ数500の上限
+        while True:
+            # 現在のレベルでの必要メッセージ数を計算（Lv50以上なら500、未満なら level * 10）
+            req_msgs = 500 if level >= 50 else level * 10
+            
+            if temp >= req_msgs:
+                temp -= req_msgs
+                level += 1
+            else:
+                break
 
         return level, temp #tempはlevel*10の端数
 
@@ -219,8 +228,16 @@ class Leveling(commands.Cog):
 
         embed = discord.Embed(title=f"現在の{target.global_name or target.name}のレベル", color=0x0000FF)
         embed.set_thumbnail(url=target.display_avatar.url)
+        
         level, temp = self.get_level(msg_count)
-        embed.add_field(name=f"[Lv.{level}] {target.global_name or target.name} ({target.name})", value=f"`|{'█' * (temp*20//(level*10))}{'░' * (20 - temp*20//(level*10))}| {temp*100//(level*10)}% Lv.{level+1}まであと{level*10 - temp}`", inline = False) #プログレスバーと次のレベルまで必要なメッセージ数の表示
+        # プログレスバーの計算用に現在の必要メッセージ数を取得
+        req_msgs = 500 if level >= 50 else level * 10
+        #プログレスバーと次のレベルまで必要なメッセージ数の表示
+        embed.add_field(
+            name=f"[Lv.{level}] {target.global_name or target.name} ({target.name})", 
+            value=f"`|{'█' * (temp*20//req_msgs)}{'░' * (20 - temp*20//req_msgs)}| {temp*100//req_msgs}% Lv.{level+1}まであと{req_msgs - temp}`", 
+            inline = False
+        )
         await ctx.send(embed=embed)
 
 async def setup(bot):
